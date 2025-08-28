@@ -1,5 +1,5 @@
 # Standard library imports
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 # Third-party imports
 from icalendar import Calendar, Component
@@ -66,6 +66,16 @@ def format_temporal_information(e: Component):
     return start_date, end_date, is_all_day_event
 
 
+def is_past(start_date):
+    """
+    Check if event is in the past.
+    Precondition: For datetime, run startdt.replace(tzinfo=None) beforehand.
+    """
+    if type(start_date) is date:
+        return start_date < date.today()
+    return start_date < datetime.today()
+
+
 def convert_ics_to_csv(cal: Calendar, csv_path: Path):
     """
     Write a Calendar to a csv file
@@ -78,6 +88,9 @@ def convert_ics_to_csv(cal: Calendar, csv_path: Path):
             title = prepare_string_for_csv(event.get('SUMMARY'))
             description = prepare_string_for_csv(event.get('DESCRIPTION', ''))
             start_date, end_date, is_all_day_event = format_temporal_information(event)
+
+            if is_past(end_date):     # Ignore past events
+                continue
             
             f.write(f"{title},{start_date},{end_date},{event.get('LOCATION')},{description},{is_all_day_event}\n")
 
