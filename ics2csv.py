@@ -78,7 +78,7 @@ def is_past(start_date):
 
 def convert_ics_to_csv(cal: Calendar, csv_path: Path):
     """
-    Write a Calendar to a csv file
+    Write future events of a Calendar to a csv file
     """
     # Write csv file
     with open(csv_path, "w") as f:
