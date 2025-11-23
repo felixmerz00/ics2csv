@@ -28,11 +28,13 @@ def write_csv_files_per_year(df: pd.DataFrame, output_path: Path):
 
     for year in years:
         df_year = df[df['Event Start Date'].str.startswith(year)]
-        df_year.to_csv(output_path / f'unique_events_{year}.csv', index=False)
+        df_year.to_csv(output_path / f'events_{year}.csv', index=False)
 
 
-path = Path('~/Desktop').expanduser()
-df = read_csv_files(path)   # Read data from all csv files
+input_path = Path('~/Downloads').expanduser()
+output_path = input_path / "unique_events"
+output_path.mkdir(exist_ok=True)
+df = read_csv_files(input_path)   # Read data from all csv files
 df = df.drop_duplicates()    # Remove duplicate events
 df = sort_events_by_start_date_time(df)   # Sort events by starting date and time
-write_csv_files_per_year(df, path)   # Write a csv file for year
+write_csv_files_per_year(df, output_path)   # Write a csv file for year
