@@ -4,16 +4,19 @@ This project converts `.ics` calendar files into CSV format. It processes each e
 
 ### Features
 
-- Converts events from an `.ics` file to a CSV file.
+- Converts event data from an `.ics` file to a CSV file.
 - Cleans up the event title and description by removing new lines and double spaces.
 - Removes timezone information.
+- Combine event data from multiple CSV files into a set of CSV files, one CSV file per year with all unique events.
 
 ### Requirements
 
 - Python 3.12.4+
-- [icalendar](https://pypi.org/project/icalendar/) library
+- [icalendar](https://pypi.org/project/icalendar/)
+- [pandas](https://pandas.pydata.org/)
 
-To install the `icalendar` library, run:
+To install the required packages, run:
 ```bash
 pip install icalendar
+pip install pandas
 ```
