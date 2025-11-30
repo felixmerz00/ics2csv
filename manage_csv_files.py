@@ -24,6 +24,12 @@ def sort_events_by_start_date_time(df: pd.DataFrame) -> pd.DataFrame:
 
 # Create one file per year and write all events of that year into the file
 def write_csv_files_per_year(df: pd.DataFrame, output_path: Path):
+    raise NotImplementedError("""
+                              This is actually not what I need. What I need is function that only writes
+                              the events to a CSV file, which have not previously been written to any CSV 
+                              file. The output should represent the delta between the old version and the 
+                              current version.
+                              """)
     years = df['Event Start Date'].str[:4].unique()
 
     for year in years:
