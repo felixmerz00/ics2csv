@@ -87,6 +87,7 @@ class OutlookEvent:
     subject: str
     start: str          # ISO 8601, includes timezone offset
     end: str             # ISO 8601, includes timezone offset
+    all_day: bool
     timezone: str
     location: str
     description_html: str
@@ -98,6 +99,7 @@ class OutlookEvent:
                 "subject": self.subject,
                 "start": self.start,
                 "end": self.end,
+                "all_day": self.all_day,
                 "timezone": self.timezone,
                 "location": self.location,
                 "description_html": self.description_html,
@@ -173,7 +175,7 @@ class GraphClient:
         params = {
             "startDateTime": start_str,
             "endDateTime": end_str,
-            "$select": "iCalUId,subject,start,end,location,bodyPreview,body",
+            "$select": "iCalUId,subject,start,end,isAllDay,location,bodyPreview,body",
             "$top": "100",
             "$orderby": "start/dateTime",
         }
@@ -200,6 +202,7 @@ class GraphClient:
     def _parse_event(raw: dict) -> OutlookEvent:
         start = raw.get("start", {})
         end = raw.get("end", {})
+        all_day = raw.get("isAllDay", False)
         location = (raw.get("location") or {}).get("displayName", "") or ""
         body = raw.get("body") or {}
         description_html = body.get("content", "") if body.get("contentType") == "html" else raw.get("bodyPreview", "")
@@ -209,6 +212,7 @@ class GraphClient:
             subject=raw.get("subject", "(No subject)"),
             start=start.get("dateTime", ""),
             end=end.get("dateTime", ""),
+            all_day=all_day,
             timezone=start.get("timeZone", "UTC"),
             location=location,
             description_html=description_html or "",
@@ -276,6 +280,7 @@ class TECClient:
             "title": event.subject,
             "start_date": _to_tec_datetime(event.start),
             "end_date": _to_tec_datetime(event.end),
+            "all_day": event.all_day,
             "timezone": event.timezone,
             "venue": {"venue": event.location} if event.location else {},
             # Custom field to store the Outlook UID on the WP side too, handy
