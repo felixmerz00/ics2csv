@@ -238,6 +238,8 @@ class TECClient:
             json=self._to_payload(event),
             timeout=REQUEST_TIMEOUT,
         )
+        if not resp.ok:
+            log.error("Tribe API error %s: %s", resp.status_code, resp.text)
         resp.raise_for_status()
         return resp.json()["id"]
 
