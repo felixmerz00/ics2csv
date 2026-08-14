@@ -278,7 +278,6 @@ class TECClient:
             "end_date": _to_tec_datetime(event.end),
             "timezone": event.timezone,
             "venue": {"venue": event.location} if event.location else {},
-            "description": event.description_html,
             # Custom field to store the Outlook UID on the WP side too, handy
             # for manual reconciliation / debugging via the WP admin UI.
             "meta": {"_outlook_ical_uid": event.ical_uid},
