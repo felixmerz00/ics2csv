@@ -272,7 +272,7 @@ class TECClient:
         (Graph returns naive-looking local time when a timeZone is given)
         and pass timezone separately.
         """
-        return {
+        payload = {
             "title": event.subject,
             "start_date": _to_tec_datetime(event.start),
             "end_date": _to_tec_datetime(event.end),
@@ -283,6 +283,9 @@ class TECClient:
             # for manual reconciliation / debugging via the WP admin UI.
             "meta": {"_outlook_ical_uid": event.ical_uid},
         }
+        if event.description_html:
+            payload["description"] = event.description_html
+        return payload
 
 
 def _to_tec_datetime(iso_dt: str) -> str:
