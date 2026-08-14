@@ -1,0 +1,55 @@
+name: Sync Outlook Calendar to WordPress
+
+on:
+  schedule:
+    # Runs daily at 05:00 UTC. Adjust to taste.
+    - cron: "0 5 * * *"
+  workflow_dispatch: {}   # allows manual runs from the Actions tab
+
+# Needed so the job can commit the updated state file back to the repo.
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    concurrency:
+      # Prevent overlapping runs from racing on the state file.
+      group: calendar-sync
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run calendar sync
+        env:
+          TENANT_ID: ${{ secrets.TENANT_ID }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          OUTLOOK_USER_ID: ${{ secrets.OUTLOOK_USER_ID }}
+          WP_URL: ${{ secrets.WP_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+        run: python sync_calendar.py
+
+      - name: Commit and push updated state file
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- state/event_mapping.json; then
+            echo "No changes to state file; nothing to commit."
+          else
+            git add state/event_mapping.json
+            git commit -m "chore: update calendar sync state [skip ci]"
+            git push
+          fi
