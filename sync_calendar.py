@@ -41,11 +41,13 @@ import logging
 import os
 import sys
 from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Any, Optional
+from zoneinfo import ZoneInfo
 
 import requests
 from dateutil.relativedelta import relativedelta
+
 
 # --------------------------------------------------------------------------
 # Configuration
@@ -65,6 +67,8 @@ MAX_MONTHS_AHEAD = int(os.environ.get("MAX_MONTHS_AHEAD", "15"))
 OUTLOOK_USER_ID = os.environ.get("OUTLOOK_USER_ID", "me")
 
 REQUEST_TIMEOUT = 30  # seconds
+
+LOCAL_TZ = ZoneInfo("Europe/Zurich")  # CET/CEST, DST-aware
 
 
 def env_or_die(name: str) -> str:
@@ -88,7 +92,6 @@ class OutlookEvent:
     start: str          # ISO 8601, includes timezone offset
     end: str             # ISO 8601, includes timezone offset
     all_day: bool
-    timezone: str
     location: str
     description_html: str
 
@@ -100,7 +103,6 @@ class OutlookEvent:
                 "start": self.start,
                 "end": self.end,
                 "all_day": self.all_day,
-                "timezone": self.timezone,
                 "location": self.location,
                 "description_html": self.description_html,
             },
@@ -121,11 +123,11 @@ class GraphClient:
         self.client_id = client_id
         self.client_secret = client_secret
         self._token: Optional[str] = None
-        self._token_expiry: datetime = datetime.min.replace(tzinfo=timezone.utc)
+        self._token_expiry: datetime = datetime.min.replace(tzinfo=LOCAL_TZ)
 
     def _get_token(self) -> str:
         """Return a cached access token, refreshing it if expired/near expiry."""
-        if self._token and datetime.now(timezone.utc) < self._token_expiry:
+        if self._token and datetime.now(LOCAL_TZ) < self._token_expiry:
             return self._token
 
         url = f"https://login.microsoftonline.com/{self.tenant_id}/oauth2/v2.0/token"
@@ -142,15 +144,14 @@ class GraphClient:
         self._token = payload["access_token"]
         expires_in = int(payload.get("expires_in", 3600))
         # Refresh a little early to avoid edge-of-expiry failures mid-run.
-        self._token_expiry = datetime.now(timezone.utc) + timedelta(seconds=expires_in - 60)
+        self._token_expiry = datetime.now(LOCAL_TZ) + timedelta(seconds=expires_in - 60)
         return self._token
 
     def _headers(self) -> dict:
         return {
             "Authorization": f"Bearer {self._get_token()}",
             "Content-Type": "application/json",
-            # Ask Graph to return start/end already in UTC for consistency.
-            "Prefer": 'outlook.timezone="UTC"',
+            "Prefer": 'outlook.timezone="Romance Standard Time"',
         }
 
     def fetch_future_events(self, user_id: str, months_ahead: int) -> list[OutlookEvent]:
@@ -161,9 +162,9 @@ class GraphClient:
         """
         al_calendar_id = "AAMkADk5M2EwMjk5LTJjMjctNDA1Ny04YjU2LWZiNDM2ZjVmMWE3OQBGAAAAAABu7tmZD2SnSrHoabtBfmdUBwC8CfXxCB4iSqPeKEOALkJFAAAAAAEGAAC8CfXxCB4iSqPeKEOALkJFAABpsmohAAA="
             # --- TEMP TEST OVERRIDE ---
-        now = datetime(2026, 8, 18, 0, 0, 0, tzinfo=timezone.utc)
-        end_window = datetime(2026, 8, 19, 0, 0, 0, tzinfo=timezone.utc)
-        # now = datetime.now(timezone.utc)
+        now = datetime(2026, 8, 18, 0, 0, 0, tzinfo=LOCAL_TZ)
+        end_window = datetime(2026, 8, 19, 0, 0, 0, tzinfo=LOCAL_TZ)
+        # now = datetime.now(LOCAL_TZ)
         # end_window = now + relativedelta(months=months_ahead)
 
         start_str = now.strftime("%Y-%m-%dT%H:%M:%S")
@@ -213,7 +214,6 @@ class GraphClient:
             start=start.get("dateTime", ""),
             end=end.get("dateTime", ""),
             all_day=all_day,
-            timezone=start.get("timeZone", "UTC"),
             location=location,
             description_html=description_html or "",
         )
@@ -281,7 +281,7 @@ class TECClient:
             "start_date": _to_tec_datetime(event.start),
             "end_date": _to_tec_datetime(event.end),
             "all_day": event.all_day,
-            "timezone": event.timezone,
+            "timezone": "Europe/Zurich",
             "venue": {"venue": event.location} if event.location else {},
             # Custom field to store the Outlook UID on the WP side too, handy
             # for manual reconciliation / debugging via the WP admin UI.
