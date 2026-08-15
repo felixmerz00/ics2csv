@@ -208,11 +208,20 @@ class GraphClient:
         body = raw.get("body") or {}
         description_html = body.get("content", "") if body.get("contentType") == "html" else raw.get("bodyPreview", "")
 
+        end_datetime_str = end.get("dateTime", "")
+        if all_day and end_datetime_str:
+            # Graph's end.dateTime for all-day events is exclusive (midnight
+            # of the day *after* the event ends). TEC expects an inclusive
+            # end date, so shift it back by one day.
+            end_dt = datetime.fromisoformat(end_datetime_str)
+            end_dt -= timedelta(days=1)
+            end_datetime_str = end_dt.isoformat()
+
         return OutlookEvent(
             ical_uid=raw["iCalUId"],
             subject=raw.get("subject", "(No subject)"),
             start=start.get("dateTime", ""),
-            end=end.get("dateTime", ""),
+            end=end_datetime_str,
             all_day=all_day,
             location=location,
             description_html=description_html or "",
