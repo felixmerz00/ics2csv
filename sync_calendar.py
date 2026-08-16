@@ -401,15 +401,15 @@ def run_sync() -> SyncSummary:
 
     # --- Fetch source data ---
     log.info("Fetching future Outlook events (up to %s months ahead)...", MAX_MONTHS_AHEAD)
-    events = graph.fetch_future_events(OUTLOOK_USER_ID, MAX_MONTHS_AHEAD)
-    log.info("Fetched %d Outlook events.", len(events))
+    outlook_events = graph.fetch_future_events(OUTLOOK_USER_ID, MAX_MONTHS_AHEAD)
+    log.info("Fetched %d Outlook events.", len(outlook_events))
 
-    events_by_uid = {e.ical_uid: e for e in events}
+    outlook_events_by_uid = {e.ical_uid: e for e in outlook_events}
 
     mapping = load_mapping(MAPPING_FILE)
 
     # --- Create / update ---
-    for uid, event in events_by_uid.items():
+    for uid, event in outlook_events_by_uid.items():
         try:
             new_hash = event.content_hash()
             entry = mapping.get(uid)
@@ -422,7 +422,7 @@ def run_sync() -> SyncSummary:
 
             elif entry.get("content_hash") != new_hash:
                 tec.update_event(entry["wp_event_id"], event)
-                entry["content_hash"] = new_hash
+                entry["content_hash"] = new_hash    # entry is a reference
                 summary.updated.append(f"{event.subject} ({uid})")
                 log.info("Updated WP event %s for '%s'", entry["wp_event_id"], event.subject)
 
@@ -434,7 +434,7 @@ def run_sync() -> SyncSummary:
 
     # --- Delete: mapping entries with no corresponding Outlook event ---
     for uid in list(mapping.keys()):
-        if uid in events_by_uid:
+        if uid in outlook_events_by_uid:
             continue
         entry = mapping[uid]
         try:
