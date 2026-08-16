@@ -2,8 +2,8 @@ name: Sync Outlook Calendar to WordPress
 
 on:
   schedule:
-    # Runs daily at 05:00 UTC. Adjust to taste.
-    - cron: "0 5 * * *"
+    # Runs daily at 02:37 UTC. This odd time avoids the crowd at round hours.
+    - cron: "37 2 * * *"
   workflow_dispatch: {}   # allows manual runs from the Actions tab
 
 # Needed so the job can commit the updated state file back to the repo.
