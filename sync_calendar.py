@@ -161,10 +161,10 @@ class GraphClient:
         into their individual occurrences).
         """
         al_calendar_id = "AAMkADk5M2EwMjk5LTJjMjctNDA1Ny04YjU2LWZiNDM2ZjVmMWE3OQBGAAAAAABu7tmZD2SnSrHoabtBfmdUBwC8CfXxCB4iSqPeKEOALkJFAAAAAAEGAAC8CfXxCB4iSqPeKEOALkJFAABpsmohAAA="
-            # --- TEMP TEST OVERRIDE ---
-        now = datetime(2026, 8, 18, 0, 0, 0, tzinfo=LOCAL_TZ)
+        # --- TEMP TEST OVERRIDE ---
+        # now = datetime(2026, 8, 18, 0, 0, 0, tzinfo=LOCAL_TZ)
         end_window = datetime(2026, 8, 19, 0, 0, 0, tzinfo=LOCAL_TZ)
-        # now = datetime.now(LOCAL_TZ)
+        now = datetime.now(LOCAL_TZ)
         # end_window = now + relativedelta(months=months_ahead)
 
         start_str = now.strftime("%Y-%m-%dT%H:%M:%S")
