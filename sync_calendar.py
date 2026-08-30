@@ -164,9 +164,9 @@ class GraphClient:
         # --- TEMP TEST OVERRIDE ---
         # now = datetime(2026, 8, 18, 0, 0, 0, tzinfo=LOCAL_TZ)
         # end_window = datetime(2026, 8, 19, 0, 0, 0, tzinfo=LOCAL_TZ)
-        end_window = datetime(2026, 9, 6, 0, 0, 0, tzinfo=LOCAL_TZ)
+        # Production time period
         now = datetime.now(LOCAL_TZ)
-        # end_window = now + relativedelta(months=months_ahead)
+        end_window = now + relativedelta(months=months_ahead)
 
         start_str = now.strftime("%Y-%m-%dT%H:%M:%S")
         end_str = end_window.strftime("%Y-%m-%dT%H:%M:%S")
