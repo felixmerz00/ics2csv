@@ -40,6 +40,7 @@ import json
 import logging
 import os
 import sys
+from bs4 import BeautifulSoup
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from typing import Any, Optional
@@ -207,7 +208,15 @@ class GraphClient:
         all_day = raw.get("isAllDay", False)
         location = (raw.get("location") or {}).get("displayName", "") or ""
         body = raw.get("body") or {}
-        description_html = body.get("content", "") if body.get("contentType") == "html" else raw.get("bodyPreview", "")
+        raw_content = body.get("content", "") if body.get("contentType") == "html" else raw.get("bodyPreview", "")
+        
+        if raw_content:
+            # Parse HTML to plain text, eliminating formatting tags
+            soup = BeautifulSoup(raw_content, "html.parser")
+            # Convert text and strip outer leading/trailing whitespace
+            description_html = soup.get_text(separator="\n").strip()
+        else:
+            description_html = ""
 
         end_datetime_str = end.get("dateTime", "")
         if all_day and end_datetime_str:
